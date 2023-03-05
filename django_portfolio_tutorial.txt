@@ -1,0 +1,204 @@
+----- Using Django ------
+https://realpython.com/get-started-with-django-1/
+
+Set up a repo 
+1. Make new repo
+
+Set up virtual env
+1. create a virtual env $ python3 -m venv venvname (first time only)
+2. activate the venv $ venv\Scripts\activate.bat
+3. install Django $ pip install Django (first time only)
+
+Set Up Django Project
+1. create project $ django-admin startproject personal_portfolio
+2. move manage.py and personal_portfolio dir up one level
+$ move personal_portfolio\manage.py .\
+$ move personal_portfolio\personal_portfolio\* personal_portfolio
+$ rmdir -r personal_portfolio\personal_portfolio\
+
+Running the server
+1. $ python manage.py runserver (ctrl+C to exit)
+2. In the browser go to localhost:8000
+
+Creating an App (Basic)
+1. $ python manage.py startapp hello_world
+
+Inside this directory (the app dir), there are;
+A. __init__.py tells Python to treat the directory as a Python package.
+B. admin.py contains settings for the Django admin pages.
+C. apps.py contains settings for the application configuration.
+D. models.py contains a series of classes that Django’s ORM converts to database tables.
+E. tests.py contains test classes.
+F. views.py contains functions and classes that handle what data is displayed in the HTML templates.
+
+2. Install the app to project by going to project dir and editing the settings;
+2.1 $ notepad settings.py
+2.2 Add 'hello_world' to list of installed apps
+
+The project now knows the app exists!
+
+Create a View
+Info: Views in Django are a collection of functions or classes inside the views.py file in your app directory. Each function or class handles the logic that gets processed each time a different URL is visited.
+
+1. Go to app dir and edit views.py
+2. Add the following fnction to the code;
+$  def hello_world(request):
+     return render(request, 'hello_world.html', {})
+
+Info: This new func. will render a html file that we now need to create. It takes one arg. - an HttpRequestObject - created whenever a page is loaded, containing info on the request such as GET and POST.
+
+3. Create the templates folder in the app folder and an html file for the new view
+$ mkdir templates
+$ echo. > templates\"hello_world.html"
+
+4. Add some text to your html (v basic for now)
+$ notepad hello_world.html"
+<h1>Hello, World!</h1>
+
+5. Link the views and templates of the new app to the project by including a url configuration in the prject directory
+$ notepad urls.py
+Add the indicated lines to the script as shown below;
+
+from django.contrib import admin
+--> from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+--> path('', include('hello_world.urls')),
+]
+
+This looks for a module called urls.py inside the hello_world application and registers any URLs defined there.
+
+Visiting root path of the URL (localhost:800) will register hello_world applications urls but hello_world.urls module doesn't exist yet
+
+$ echo. > ..\hello_world\urls.py
+$ notepad ..\hello_world\urls.py
+
+Create the following path;
+
+from django.urls import path
+from hello_world import views
+
+urlpatterns = [
+    path('', views.hello_world, name='hello_world'),
+]
+
+6. Adding a template (using bootstrap)
+
+Templates handle the look of the site in the front end, making sure all apps share the same style without having to repeat the code for each app.
+
+Make a directory called templates in personal_portfolio and add a file caled base.html. 
+
+Add a basic template:
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+{% block page_content %}{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+Extend the template in the hello_world app (hello_world\templates\hello_world.html):
+{% extends "base.html" %}
+{% block page_content %}
+<h1>Hello, World!</h1>
+{% endblock %}
+
+7. Update the django project (personal_portfolio) settings.py option for templates 'DIRS' to look for the base template by porviding "personal_portfolio\templates\" as an option.
+
+Note: Adding more developed templates should be the last stage of development.
+
+8. Adding an app to showcase python projects
+
+Delete the hello_world app and remove hello_world from installed apps in settings.py and urls in urls.py in the personal_portfolio project folder
+
+Create the new app (in the repository):
+$ python manage.py startapp projects
+Add 'projects' to the installed apps option in settings - we will add the url later
+
+9. Use an Operational Relationship Manager (ORM) to create a database in django. This avoids us needing to use SQL. To do this we create a model. 
+
+Edit the models.py file in the projects app, add a new class (class attributes are columns and instances are rows)
+
+class Project(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    technology = models.CharField(max_length=20)
+    image = models.FilePathField(path="/img")
+
+Create the database by intiating Django's ORM from the directory;
+Initiate migrations
+$ python manage.py makemigrations projects
+Make migrations
+$ python manage.py migrate projects
+
+10. Add rows to the database (create instances of the class using the Django shell):
+$ python manage.py shell
+>>> from projects.models import Project
+>>> p1 = Project(
+...     title='My First Project',
+...     description='A web development project.',
+...     technology='Django',
+...     image='img/project1.png'
+... )
+
+
+lonza_lab_automation = Project(title='Lab Automation Proof-Of-Concept', personal_or_professional='Professional', employer='Lonza', location = 'Visp, Switzerland', field ='Specialty Chemicals, Process Analytical Technology', description='Working for Lonza I ran a proof-of-concept project to optimise on-site production of spectrometer models. This included analytical chemistry, chemometrics, python modelling, process design, P&ID, HAZOP, and lab automation. More info goes here...', technology_used='UV-Vis spectrometry, Python, LabManager', image='img/lab_automation.png')
+
+>>> p1.save()
+>>> p2 = Project(
+...     title='My Second Project',
+...     description='Another web development project.',
+...     technology='Flask',
+...     image='img/project2.png'
+... )
+>>> p2.save()
+>>> p3 = Project(
+...     title='My Third Project',
+...     description='A final development project.',
+...     technology='Django',
+...     image='img/project3.png'
+... )
+>>> p3.save()
+
+11.  Take these three projects you created and create a view function to display them to users on a web page (send the data from the database to the HTML templates):
+
+In the projects app (inside views.py), create two different views:
+
+An index view that shows a snippet of information about each project
+from django.shortcuts import render
+from projects.models import Project
+
+def project_index(request):
+    projects = Project.objects.all()
+    context = {
+        'projects': projects
+    }
+    return render(request, 'project_index.html', context)
+
+A detail view that shows more information on a particular topic
+def project_detail(request, pk):
+    project = Project.objects.get(pk=pk)
+    context = {
+        'project': project
+    }
+    return render(request, 'project_detail.html', context)
+
+12. Once your view functions are created, we need to hook them up to URLs. Create a file projects/urls.py to hold the URL configuration for the app. This file should contain the following code:
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.project_index, name="project_index"),
+    path("<int:pk>/", views.project_detail, name="project_detail"),
+]
+
+In line 5, we hook up the root URL of our app to the project_index view. It is slightly more complicated to hook up the project_detail view. To do this, we want the URL to be /1, or /2, and so on, depending on the pk of the project.
+
+The pk value in the URL is the same pk passed to the view function, so you need to dynamically generate these URLs depending on which project you want to view. To do this, we used the <int:pk> notation. This just tells Django that the value passed in the URL is an integer, and its variable name is pk.
+
+
+
+
+
